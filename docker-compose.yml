@@ -1,0 +1,186 @@
+# services:
+#   # --- Existing Spark & Scylla Configs (Keep as they are) ---
+#   spark-master:
+#     image: apache/spark:3.5.0
+#     container_name: spark-master
+#     hostname: spark-master
+#     user: root
+#     ports:
+#       - "8080:8080"
+#       - "7077:7077"
+#     environment:
+#       - SPARK_MODE=master
+#     command: >
+#       bash -c "pip install faker pandas && 
+#       /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master"
+#     volumes:
+#       - ./scripts/python:/opt/spark/work-dir/scripts/python
+#       - ./data/delta-lake:/opt/spark/work-dir/delta-lake
+
+#   spark-worker:
+#     image: apache/spark:3.5.0
+#     container_name: spark-worker
+#     user: root
+#     depends_on:
+#       - spark-master
+#     environment:
+#       - SPARK_MASTER=spark://spark-master:7077
+#     command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+#     volumes:
+#       - ./scripts/python:/opt/spark/work-dir/scripts/python
+#       - ./data/delta-lake:/opt/spark/work-dir/delta-lake
+
+#   scylla:
+#     image: scylladb/scylla:5.2.0
+#     container_name: scylla
+#     command: --developer-mode 1 --smp 1 --memory 2G
+#     ports:
+#       - "9042:9042"
+#       - "9180:9180"
+#     volumes:
+#       - ./scripts/scylladb:/opt/scripts/scylladb
+
+#   # --- Airflow Stack ---
+#   postgres:
+#     image: postgres:13
+#     container_name: airflow-postgres
+#     environment:
+#       - POSTGRES_USER=airflow
+#       - POSTGRES_PASSWORD=airflow
+#       - POSTGRES_DB=airflow
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U airflow"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 5
+
+#   airflow-webserver:
+#     image: apache/airflow:2.7.1
+#     container_name: airflow-webserver
+#     user: root # Ensuring it can write to logs/volumes if needed
+#     depends_on:
+#       postgres:
+#         condition: service_healthy
+#     environment:
+#       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+#       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+#       - AIRFLOW__CORE__LOAD_EXAMPLES=False
+#       - AIRFLOW__WEBSERVER__SECRET_KEY=supersecretkey123
+#     ports:
+#       - "8081:8080"
+#     volumes:
+#       - ./dags:/opt/airflow/dags
+#       - /var/run/docker.sock:/var/run/docker.sock
+#     # This initializes the DB and creates the user automatically
+#     command: bash -c "airflow db init && airflow users create --username admin --firstname admin --lastname admin --role Admin --email admin@example.com --password admin || true && airflow webserver"
+
+#   airflow-scheduler:
+#     image: apache/airflow:2.7.1
+#     container_name: airflow-scheduler
+#     user: root # Critical for "docker exec" commands to work via BashOperator
+#     depends_on:
+#       postgres:
+#         condition: service_healthy
+#     environment:
+#       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+#       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+#       - AIRFLOW__WEBSERVER__SECRET_KEY=supersecretkey123
+#     volumes:
+#       - ./dags:/opt/airflow/dags
+#       - /var/run/docker.sock:/var/run/docker.sock
+#     command: scheduler
+
+services:
+  # --- Existing Spark & Scylla Configs ---
+  spark-master:
+    image: apache/spark:3.5.0
+    container_name: spark-master
+    hostname: spark-master
+    user: root
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - SPARK_MODE=master
+    command: >
+      bash -c "pip install faker pandas && 
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master"
+    volumes:
+      - ./scripts/python:/opt/spark/work-dir/scripts/python
+      - ./data/delta-lake:/opt/spark/work-dir/delta-lake
+      - ./logs:/logs
+
+  spark-worker:
+    image: apache/spark:3.5.0
+    container_name: spark-worker
+    user: root
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    volumes:
+      - ./scripts/python:/opt/spark/work-dir/scripts/python
+      - ./data/delta-lake:/opt/spark/work-dir/delta-lake
+      - ./logs:/logs
+
+  scylla:
+    image: scylladb/scylla:5.2.0
+    container_name: scylla
+    command: --developer-mode 1 --smp 1 --memory 2G
+    ports:
+      - "9042:9042"
+      - "9180:9180"
+    volumes:
+      - ./scripts/scylladb:/opt/scripts/scylladb
+
+  # --- Airflow Stack ---
+  postgres:
+    image: postgres:13
+    container_name: airflow-postgres
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  airflow-webserver:
+    image: apache/airflow:2.7.1
+    container_name: airflow-webserver
+    user: root 
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=supersecretkey123
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs:/logs
+    command: bash -c "airflow db init && airflow users create --username admin --firstname admin --lastname admin --role Admin --email admin@example.com --password admin || true && airflow webserver"
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.1
+    container_name: airflow-scheduler
+    user: root 
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__WEBSERVER__SECRET_KEY=supersecretkey123
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs:/logs
+    command: scheduler

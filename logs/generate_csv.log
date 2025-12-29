@@ -1,0 +1,7 @@
+2025-12-29 14:02:16,520 - INFO - STARTING DATA GENERATION: 5 files.
+2025-12-29 14:02:16,668 - INFO - GENERATED: 400 RECORDS | FILE PATH: /opt/spark/work-dir/delta-lake/landing-zone/transactions_batch_20251229_140216_661242.csv
+2025-12-29 14:02:16,769 - INFO - GENERATED: 400 RECORDS | FILE PATH: /opt/spark/work-dir/delta-lake/landing-zone/transactions_batch_20251229_140216_764148.csv
+2025-12-29 14:02:16,868 - INFO - GENERATED: 400 RECORDS | FILE PATH: /opt/spark/work-dir/delta-lake/landing-zone/transactions_batch_20251229_140216_862976.csv
+2025-12-29 14:02:16,967 - INFO - GENERATED: 400 RECORDS | FILE PATH: /opt/spark/work-dir/delta-lake/landing-zone/transactions_batch_20251229_140216_962196.csv
+2025-12-29 14:02:17,067 - INFO - GENERATED: 400 RECORDS | FILE PATH: /opt/spark/work-dir/delta-lake/landing-zone/transactions_batch_20251229_140217_061601.csv
+2025-12-29 14:02:17,067 - INFO - DATA GENERATION: COMPLETE

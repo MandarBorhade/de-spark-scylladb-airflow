@@ -1,0 +1,4 @@
+2025-12-29 14:02:53,787 - INFO - Starting ingestion process: Reading from Delta Lake.
+2025-12-29 14:03:00,265 - INFO - INGESTING DATA INTO SCYLLADB | TABLE: 'customer_transactions'
+2025-12-29 14:03:16,456 - INFO - DATA INGESTION COMPLETE | COUNT 2000
+2025-12-29 14:03:16,457 - INFO - SPARK SESSION: <pyspark.sql.session.SparkSession object at 0x71bfdccc7d30>

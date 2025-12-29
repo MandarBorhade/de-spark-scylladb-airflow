@@ -1,0 +1,3 @@
+2025-12-29 14:02:24,937 - INFO - READING CSV FROM LANDING ZONE | /opt/spark/work-dir/delta-lake/landing-zone
+2025-12-29 14:02:30,533 - INFO - WRITING TO DELTA LAKE: 2000
+2025-12-29 14:02:45,856 - INFO - ADDED DATA TO: /opt/spark/work-dir/delta-lake/customer_transactions
